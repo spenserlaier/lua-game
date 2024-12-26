@@ -4,6 +4,7 @@ local player = {
 	y = 300,
 	speed = 200,
 	size = 25,
+	health = 100,
 }
 
 --local enemy = {
@@ -11,10 +12,11 @@ local player = {
 --	y = 100,
 --	size = 30,
 --}
-local defaultEnemySize = 30
-
+local deadEnemyIds = {}
+local playerProjectiles = {}
 local isRunning = true -- Game state flag
 local function copyTable(original)
+	--TODO: experiment with metatables for more idiomatic inheritance/object oriented programming
 	local copy = {}
 	for key, value in pairs(original) do
 		copy[key] = value
@@ -22,27 +24,44 @@ local function copyTable(original)
 	return copy
 end
 
-local ballProjectile = {
+local ballProjectileTemplate = {
 	radius = 10,
 	speed = 25,
 	x = nil,
 	y = nil,
 	enemyId = nil, -- track the current enemy that the projectile is tracking?
+	damage = 20,
+	size = 20,
+	color = { 0.3, 0.3, 0.3 },
 }
+
+local function generateBallProjectile(player, enemyId)
+	local ball = copyTable(ballProjectileTemplate)
+	ball.x = player.x
+	ball.y = player.y
+	ball.enemyId = enemyId
+	return ball
+end
+
+local function detectCollision(obj1, obj2)
+	return math.abs(obj1.x - obj2.x) < (obj1.size + obj2.size) / 2
+		and math.abs(obj1.y - obj2.y) < (obj1.size + obj2.size) / 2
+end
 
 -- Load assets and initialize the game
 function love.load()
 	love.window.setTitle("Lua Survivors")
 	love.graphics.setBackgroundColor(0.2, 0.3, 0.4)
 end
-local function generateEnemy(posX, posY)
-	love.graphics.setColor(0.8, 0.1, 0.2)
-	love.graphics.circle("fill", posX, posY, defaultEnemySize)
-end
 
 local function drawPlayer()
 	love.graphics.setColor(0.1, 0.8, 0.2)
 	love.graphics.rectangle("fill", player.x, player.y, player.size, player.size)
+end
+
+local function drawCircleFill(object)
+	love.graphics.setColor(object.color[1], object.color[2], object.color[3])
+	love.graphics.circle("fill", object.x, object.y, object.size)
 end
 
 local function drawEnemy(enemy)
@@ -100,6 +119,10 @@ function love.update(dt)
 			local enemy = enemies[i]
 			moveObjectTowardsTarget(enemy, player, dt)
 		end
+		for i = 1, #playerProjectiles do
+			local projectile = playerProjectiles[i]
+			moveObjectTowardsTarget(projectile, enemies[projectile.enemyId], dt)
+		end
 		if movementKeysPressed["up"] then
 			player.y = player.y - player.speed * dt
 		end
@@ -130,7 +153,10 @@ function love.draw()
 		drawPlayer()
 		-- Draw enemy
 		for i = 1, #enemies do
-			drawEnemy(enemies[i])
+			drawCircleFill(enemies[i])
+		end
+		for i = 1, #playerProjectiles do
+			drawCircleFill(playerProjectiles[i])
 		end
 	else
 		-- Game over screen
@@ -161,6 +187,15 @@ function love.keyreleased(key)
 	end
 end
 function love.keypressed(key)
+	if key == "space" then
+		local closestTarget = getClosestObjectToTarget(player, enemies)
+		if closestTarget ~= nil then
+			print("generating a ball projectile...")
+			local ball = generateBallProjectile(player, closestTarget)
+			print(ball)
+			table.insert(playerProjectiles, ball)
+		end
+	end
 	if movementMappings.up[key] ~= nil then
 		if movementKeysPressed["down"] == true then
 			movementKeysPressed["down"] = false
