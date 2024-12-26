@@ -14,6 +14,21 @@ local player = {
 local defaultEnemySize = 30
 
 local isRunning = true -- Game state flag
+local function copyTable(original)
+	local copy = {}
+	for key, value in pairs(original) do
+		copy[key] = value
+	end
+	return copy
+end
+
+local ballProjectile = {
+	radius = 10,
+	speed = 25,
+	x = nil,
+	y = nil,
+	enemyId = nil, -- track the current enemy that the projectile is tracking?
+}
 
 -- Load assets and initialize the game
 function love.load()
@@ -35,24 +50,44 @@ local function drawEnemy(enemy)
 	love.graphics.circle("fill", enemy.x, enemy.y, enemy.size)
 end
 
-local function moveEnemy(enemyObj, playerObj, dt)
-	-- need to compute a line from enemy to player, and adjust x and y
-	-- according to that line
-	local yDiff = playerObj.y - enemyObj.y
-	local xDiff = playerObj.x - enemyObj.x
-	local vectorLength = math.sqrt((xDiff * xDiff + yDiff * yDiff))
+local function getDistance(obj1, obj2)
+	local yDiff = obj1.y - obj2.y
+	local xDiff = obj1.x - obj2.x
+	local distance = math.sqrt((xDiff * xDiff + yDiff * yDiff))
+	return distance
+end
+
+local function getClosestObjectToTarget(target, objects)
+	local minDist = nil
+	local minIdx = nil
+	for i = 1, #objects do
+		local dist = getDistance(target, objects[i])
+		if minDist == nil or dist < minDist then
+			minDist = dist
+			minIdx = i
+		end
+	end
+	return minIdx
+end
+
+local function moveObjectTowardsTarget(object, target, dt)
+	local yDiff = target.y - object.y
+	local xDiff = target.x - object.x
+	local vectorLength = getDistance(object, target)
 	local unitX = xDiff / vectorLength
 	local unitY = yDiff / vectorLength
 
-	enemyObj.x = enemyObj.x + enemyObj.speed * dt * unitX
-	enemyObj.y = enemyObj.y + enemyObj.speed * dt * unitY
+	object.x = object.x + object.speed * dt * unitX
+	object.y = object.y + object.speed * dt * unitY
 end
+
 local testEnemy = {
 	x = 0,
 	y = 0,
 	speed = 25,
 	color = { 0.5, 0.5, 0.5 },
 	size = 25,
+	health = 100,
 }
 local enemies = { testEnemy }
 
@@ -63,7 +98,7 @@ function love.update(dt)
 		-- Player movement
 		for i = 1, #enemies do
 			local enemy = enemies[i]
-			moveEnemy(enemy, player, dt)
+			moveObjectTowardsTarget(enemy, player, dt)
 		end
 		if movementKeysPressed["up"] then
 			player.y = player.y - player.speed * dt
