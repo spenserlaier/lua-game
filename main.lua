@@ -15,6 +15,16 @@ local player = {
 local deadEnemyIds = {}
 local playerProjectiles = {}
 local isRunning = true -- Game state flag
+local enemyId = 0
+
+local function generateId()
+	local id = 0.0
+	return function()
+		id = id + 1.0
+		return id
+	end
+end
+local getNextEnemyId = generateId()
 local function copyTable(original)
 	--TODO: experiment with metatables for more idiomatic inheritance/object oriented programming
 	local copy = {}
@@ -48,6 +58,14 @@ local function detectCollision(obj1, obj2)
 		and math.abs(obj1.y - obj2.y) < (obj1.size + obj2.size) / 2
 end
 
+local function convertListToSet(list)
+	local set = {}
+	for i = 1, #list do
+		set[list[i]] = true
+	end
+	return set
+end
+
 -- Load assets and initialize the game
 function love.load()
 	love.window.setTitle("Lua Survivors")
@@ -64,11 +82,6 @@ local function drawCircleFill(object)
 	love.graphics.circle("fill", object.x, object.y, object.size)
 end
 
-local function drawEnemy(enemy)
-	love.graphics.setColor(enemy.color[1], enemy.color[2], enemy.color[3])
-	love.graphics.circle("fill", enemy.x, enemy.y, enemy.size)
-end
-
 local function getDistance(obj1, obj2)
 	local yDiff = obj1.y - obj2.y
 	local xDiff = obj1.x - obj2.x
@@ -78,15 +91,15 @@ end
 
 local function getClosestObjectToTarget(target, objects)
 	local minDist = nil
-	local minIdx = nil
-	for i = 1, #objects do
-		local dist = getDistance(target, objects[i])
+	local minKey = nil
+	for i, object in pairs(objects) do
+		local dist = getDistance(target, object)
 		if minDist == nil or dist < minDist then
 			minDist = dist
-			minIdx = i
+			minKey = i
 		end
 	end
-	return minIdx
+	return minKey
 end
 
 local function moveObjectTowardsTarget(object, target, dt)
@@ -108,15 +121,14 @@ local testEnemy = {
 	size = 25,
 	health = 100,
 }
-local enemies = { testEnemy }
-
+local enemies = {}
+enemies[getNextEnemyId()] = testEnemy
 -- Update game logic (called every frame)
 local movementKeysPressed = {}
 function love.update(dt)
 	if isRunning then
 		-- Player movement
-		for i = 1, #enemies do
-			local enemy = enemies[i]
+		for _, enemy in pairs(enemies) do
 			moveObjectTowardsTarget(enemy, player, dt)
 		end
 		for i = 1, #playerProjectiles do
@@ -135,14 +147,6 @@ function love.update(dt)
 		if movementKeysPressed["right"] then
 			player.x = player.x + player.speed * dt
 		end
-
-		-- Simple collision detection
-		--if
-		--	math.abs(player.x - enemy.x) < (player.size + enemy.size) / 2
-		--	and math.abs(player.y - enemy.y) < (player.size + enemy.size) / 2
-		--then
-		--	isRunning = false -- Stop the game
-		--end
 	end
 end
 
@@ -152,8 +156,8 @@ function love.draw()
 		-- Draw player
 		drawPlayer()
 		-- Draw enemy
-		for i = 1, #enemies do
-			drawCircleFill(enemies[i])
+		for _, enemy in pairs(enemies) do
+			drawCircleFill(enemy)
 		end
 		for i = 1, #playerProjectiles do
 			drawCircleFill(playerProjectiles[i])
