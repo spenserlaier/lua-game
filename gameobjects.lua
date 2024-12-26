@@ -12,6 +12,8 @@ function gameEntity:Player()
 	setmetatable(player, self)
 	player["speed"] = 200
 	player["health"] = 100
+	player["x"] = 400
+	player["y"] = 300
 	return player
 end
 
@@ -20,6 +22,9 @@ function gameEntity:Enemy()
 	setmetatable(enemy, gameEntity)
 	enemy["speed"] = 100
 	enemy["health"] = 100
+	enemy["x"] = 75
+	enemy["y"] = 100
+	return enemy
 end
 
 local gameProjectile = {

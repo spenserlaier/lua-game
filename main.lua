@@ -1,17 +1,9 @@
+local gameObjects = require("./gameobjects")
 -- Set up global variables or constants
-local player = {
-	x = 400,
-	y = 300,
-	speed = 200,
-	size = 25,
-	health = 100,
-}
-
---local enemy = {
---	x = 100,
---	y = 100,
---	size = 30,
---}
+local gameEntity = gameObjects["gameEntity"]
+local gameProjectile = gameObjects["gameProjectile"]
+local player = gameEntity:Player()
+local enemy = gameEntity:Enemy()
 local deadEnemyIds = {}
 local playerProjectiles = {}
 local isRunning = true -- Game state flag
@@ -112,14 +104,15 @@ local function moveObjectTowardsTarget(object, target, dt)
 	object.y = object.y + object.speed * dt * unitY
 end
 
-local testEnemy = {
-	x = 0,
-	y = 0,
-	speed = 25,
-	color = { 0.5, 0.5, 0.5 },
-	size = 25,
-	health = 100,
-}
+--local testEnemy = {
+--	x = 0,
+--	y = 0,
+--	speed = 25,
+--	color = { 0.5, 0.5, 0.5 },
+--	size = 35,
+--	health = 100,
+--}
+local testEnemy = gameEntity:Enemy()
 local enemies = {}
 enemies[getNextEnemyId()] = testEnemy
 -- Update game logic (called every frame)
