@@ -36,6 +36,19 @@ local function drawCircleFill(object)
 	love.graphics.circle("fill", object.x, object.y, object.size)
 end
 
+local function sprayRingProjectiles(player, numProjectiles)
+	local angleInterval = (2 * math.pi) / numProjectiles
+	local currentAngle = 0
+	for i = 1, numProjectiles do
+		local xOffset = (1 * math.cos(currentAngle))
+		local yOffset = (1 * math.sin(currentAngle))
+		currentAngle = currentAngle + angleInterval
+		table.insert(
+			playerProjectiles,
+			gameProjectile:Default(player.x + player.size / 2, player.y + player.size / 2, xOffset, yOffset)
+		)
+	end
+end
 local testEnemy = gameEntity:Enemy()
 local enemies = {}
 enemies[getNextEnemyId()] = testEnemy
@@ -63,7 +76,15 @@ function love.update(dt)
 			gameObjects.moveObjectTowardsTarget(enemy, player, dt)
 		end
 		for _, projectile in pairs(playerProjectiles) do
-			gameObjects.moveObjectTowardsTarget(projectile, enemies[projectile.enemyId], dt)
+			if projectile.enemyId ~= nil then
+				gameObjects.moveObjectTowardsTarget(projectile, enemies[projectile.enemyId], dt)
+			elseif projectile.dirX ~= nil and projectile.dirY ~= nil then
+				gameObjects.moveObjectTowardsTarget(
+					projectile,
+					{ x = projectile.x + projectile.dirX, y = projectile.y + projectile.dirY },
+					dt
+				)
+			end
 		end
 
 		if movementKeysPressed["up"] then
@@ -123,8 +144,12 @@ function love.keyreleased(key)
 end
 function love.keypressed(key)
 	if key == "space" then
+		sprayRingProjectiles(player, 12)
 		local closestTarget = gameObjects.getClosestObjectToTarget(player, enemies)
-		if closestTarget ~= nil then
+		--if closestTarget ~= nil then
+		if false then
+			--TODO
+
 			--local ball = generateBallProjectile(player, closestTarget)
 			local ball = gameProjectile:SeekingProjectile(closestTarget, player.x, player.y)
 			table.insert(playerProjectiles, ball)

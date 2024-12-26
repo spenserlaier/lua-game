@@ -48,11 +48,13 @@ function gameProjectile:SeekingProjectile(enemyId, x, y)
 	seekingProjectile["y"] = y
 	return seekingProjectile
 end
-function gameProjectile:Default(x, y)
+function gameProjectile:Default(x, y, dirX, dirY)
 	local proj = {}
 	setmetatable(proj, gameProjectile)
 	proj["x"] = x
 	proj["y"] = y
+	proj["dirX"] = dirX
+	proj["dirY"] = dirY
 	return proj
 end
 local function getDistance(obj1, obj2)
