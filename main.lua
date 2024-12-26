@@ -5,6 +5,9 @@ local gameProjectile = gameObjects["gameProjectile"]
 local player = gameEntity:Player()
 local playerProjectiles = {}
 local isRunning = true -- Game state flag
+local SCREEN_WIDTH = 800
+local SCREEN_HEIGHT = 600
+local success = love.window.setMode(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 local function generateId()
 	local id = 0.0
@@ -72,6 +75,7 @@ function love.update(dt)
 				end
 			end
 		end
+		gameObjects.cleanUpProjectiles(playerProjectiles, SCREEN_WIDTH, SCREEN_HEIGHT)
 		for _, enemy in pairs(enemies) do
 			gameObjects.moveObjectTowardsTarget(enemy, player, dt)
 		end

@@ -34,7 +34,7 @@ local gameProjectile = {
 	x = nil,
 	y = nil,
 	damage = 20,
-	size = 20,
+	size = 15,
 	color = { 0.3, 0.3, 0.3 },
 	collisions = 1,
 	collisionCooldownTime = 0,
@@ -88,8 +88,22 @@ local function moveObjectTowardsTarget(object, target, dt)
 	object.y = object.y + object.speed * dt * unitY
 end
 
+local function cleanUpProjectiles(projectiles, screenWidth, screenHeight)
+	for idx, projectile in pairs(projectiles) do
+		local projCenterX = projectile.x + projectile.size / 2
+		local projCenterY = projectile.y + projectile.size / 2
+		if projCenterX < 0 or projCenterX >= screenWidth then
+			projectiles[idx] = nil
+		end
+		if projCenterY < 0 or projCenterY >= screenHeight then
+			projectiles[idx] = nil
+		end
+	end
+end
+
 exports["gameProjectile"] = gameProjectile
 exports["gameEntity"] = gameEntity
 exports["getClosestObjectToTarget"] = getClosestObjectToTarget
 exports["moveObjectTowardsTarget"] = moveObjectTowardsTarget
+exports["cleanUpProjectiles"] = cleanUpProjectiles
 return exports
