@@ -38,7 +38,7 @@ local gameProjectile = {
 	collisions = 1,
 }
 gameProjectile.__index = gameProjectile
-function gameProjectile:seekingProjectile(enemyId, x, y)
+function gameProjectile:SeekingProjectile(enemyId, x, y)
 	local seekingProjectile = {}
 	setmetatable(seekingProjectile, gameProjectile)
 	seekingProjectile["enemyId"] = enemyId
@@ -46,7 +46,7 @@ function gameProjectile:seekingProjectile(enemyId, x, y)
 	seekingProjectile["y"] = y
 	return seekingProjectile
 end
-function gameProjectile:default(x, y)
+function gameProjectile:Default(x, y)
 	local proj = {}
 	setmetatable(proj, gameProjectile)
 	proj["x"] = x

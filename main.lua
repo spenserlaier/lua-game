@@ -16,14 +16,6 @@ local function generateId()
 	end
 end
 local getNextEnemyId = generateId()
-local function copyTable(original)
-	--TODO: experiment with metatables for more idiomatic inheritance/object oriented programming
-	local copy = {}
-	for key, value in pairs(original) do
-		copy[key] = value
-	end
-	return copy
-end
 
 local ballProjectile = {
 	radius = 10,
@@ -201,9 +193,8 @@ function love.keypressed(key)
 	if key == "space" then
 		local closestTarget = getClosestObjectToTarget(player, enemies)
 		if closestTarget ~= nil then
-			print("generating a ball projectile...")
-			local ball = generateBallProjectile(player, closestTarget)
-			print(ball)
+			--local ball = generateBallProjectile(player, closestTarget)
+			local ball = gameProjectile:SeekingProjectile(closestTarget, player.x, player.y)
 			table.insert(playerProjectiles, ball)
 		end
 	end
