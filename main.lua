@@ -3,8 +3,6 @@ local gameObjects = require("./gameobjects")
 local gameEntity = gameObjects["gameEntity"]
 local gameProjectile = gameObjects["gameProjectile"]
 local player = gameEntity:Player()
-local enemy = gameEntity:Enemy()
-local deadEnemyIds = {}
 local playerProjectiles = {}
 local isRunning = true -- Game state flag
 
@@ -16,33 +14,6 @@ local function generateId()
 	end
 end
 local getNextEnemyId = generateId()
-
-local ballProjectile = {
-	radius = 10,
-	speed = 200,
-	x = nil,
-	y = nil,
-	enemyId = nil, -- track the current enemy that the projectile is tracking?
-	damage = 20,
-	size = 20,
-	color = { 0.3, 0.3, 0.3 },
-	collisions = 1,
-}
-function ballProjectile:new(o)
-	o = o or {} -- Use an empty table if none is provided
-	setmetatable(o, self)
-	self.__index = self
-	return o
-end
-
-local function generateBallProjectile(player, enemyId)
-	--local ball = copyTable(ballProjectileTemplate)
-	local ball = ballProjectile:new()
-	ball.x = player.x
-	ball.y = player.y
-	ball.enemyId = enemyId
-	return ball
-end
 
 local function detectCollision(obj1, obj2)
 	return math.abs(obj1.x - obj2.x) < (obj1.size + obj2.size) / 2
@@ -65,45 +36,6 @@ local function drawCircleFill(object)
 	love.graphics.circle("fill", object.x, object.y, object.size)
 end
 
-local function getDistance(obj1, obj2)
-	local yDiff = obj1.y - obj2.y
-	local xDiff = obj1.x - obj2.x
-	local distance = math.sqrt((xDiff * xDiff + yDiff * yDiff))
-	return distance
-end
-
-local function getClosestObjectToTarget(target, objects)
-	local minDist = nil
-	local minKey = nil
-	for i, object in pairs(objects) do
-		local dist = getDistance(target, object)
-		if minDist == nil or dist < minDist then
-			minDist = dist
-			minKey = i
-		end
-	end
-	return minKey
-end
-
-local function moveObjectTowardsTarget(object, target, dt)
-	local yDiff = target.y - object.y
-	local xDiff = target.x - object.x
-	local vectorLength = getDistance(object, target)
-	local unitX = xDiff / vectorLength
-	local unitY = yDiff / vectorLength
-
-	object.x = object.x + object.speed * dt * unitX
-	object.y = object.y + object.speed * dt * unitY
-end
-
---local testEnemy = {
---	x = 0,
---	y = 0,
---	speed = 25,
---	color = { 0.5, 0.5, 0.5 },
---	size = 35,
---	health = 100,
---}
 local testEnemy = gameEntity:Enemy()
 local enemies = {}
 enemies[getNextEnemyId()] = testEnemy
@@ -128,10 +60,10 @@ function love.update(dt)
 			end
 		end
 		for _, enemy in pairs(enemies) do
-			moveObjectTowardsTarget(enemy, player, dt)
+			gameObjects.moveObjectTowardsTarget(enemy, player, dt)
 		end
 		for _, projectile in pairs(playerProjectiles) do
-			moveObjectTowardsTarget(projectile, enemies[projectile.enemyId], dt)
+			gameObjects.moveObjectTowardsTarget(projectile, enemies[projectile.enemyId], dt)
 		end
 
 		if movementKeysPressed["up"] then
@@ -191,7 +123,7 @@ function love.keyreleased(key)
 end
 function love.keypressed(key)
 	if key == "space" then
-		local closestTarget = getClosestObjectToTarget(player, enemies)
+		local closestTarget = gameObjects.getClosestObjectToTarget(player, enemies)
 		if closestTarget ~= nil then
 			--local ball = generateBallProjectile(player, closestTarget)
 			local ball = gameProjectile:SeekingProjectile(closestTarget, player.x, player.y)

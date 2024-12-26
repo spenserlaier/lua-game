@@ -14,6 +14,7 @@ function gameEntity:Player()
 	player["health"] = 100
 	player["x"] = 400
 	player["y"] = 300
+	player["collisionCooldownTime"] = 0
 	return player
 end
 
@@ -36,6 +37,7 @@ local gameProjectile = {
 	size = 20,
 	color = { 0.3, 0.3, 0.3 },
 	collisions = 1,
+	collisionCooldownTime = 0,
 }
 gameProjectile.__index = gameProjectile
 function gameProjectile:SeekingProjectile(enemyId, x, y)
@@ -53,7 +55,39 @@ function gameProjectile:Default(x, y)
 	proj["y"] = y
 	return proj
 end
+local function getDistance(obj1, obj2)
+	local yDiff = obj1.y - obj2.y
+	local xDiff = obj1.x - obj2.x
+	local distance = math.sqrt((xDiff * xDiff + yDiff * yDiff))
+	return distance
+end
+
+local function getClosestObjectToTarget(target, objects)
+	local minDist = nil
+	local minKey = nil
+	for i, object in pairs(objects) do
+		local dist = getDistance(target, object)
+		if minDist == nil or dist < minDist then
+			minDist = dist
+			minKey = i
+		end
+	end
+	return minKey
+end
+
+local function moveObjectTowardsTarget(object, target, dt)
+	local yDiff = target.y - object.y
+	local xDiff = target.x - object.x
+	local vectorLength = getDistance(object, target)
+	local unitX = xDiff / vectorLength
+	local unitY = yDiff / vectorLength
+
+	object.x = object.x + object.speed * dt * unitX
+	object.y = object.y + object.speed * dt * unitY
+end
 
 exports["gameProjectile"] = gameProjectile
 exports["gameEntity"] = gameEntity
+exports["getClosestObjectToTarget"] = getClosestObjectToTarget
+exports["moveObjectTowardsTarget"] = moveObjectTowardsTarget
 return exports
