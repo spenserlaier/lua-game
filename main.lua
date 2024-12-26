@@ -33,7 +33,7 @@ local function copyTable(original)
 	return copy
 end
 
-local ballProjectileTemplate = {
+local ballProjectile = {
 	radius = 10,
 	speed = 200,
 	x = nil,
@@ -44,9 +44,16 @@ local ballProjectileTemplate = {
 	color = { 0.3, 0.3, 0.3 },
 	collisions = 1,
 }
+function ballProjectile:new(o)
+	o = o or {} -- Use an empty table if none is provided
+	setmetatable(o, self)
+	self.__index = self
+	return o
+end
 
 local function generateBallProjectile(player, enemyId)
-	local ball = copyTable(ballProjectileTemplate)
+	--local ball = copyTable(ballProjectileTemplate)
+	local ball = ballProjectile:new()
 	ball.x = player.x
 	ball.y = player.y
 	ball.enemyId = enemyId
