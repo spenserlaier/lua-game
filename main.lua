@@ -15,7 +15,6 @@ local player = {
 local deadEnemyIds = {}
 local playerProjectiles = {}
 local isRunning = true -- Game state flag
-local enemyId = 0
 
 local function generateId()
 	local id = 0.0
@@ -36,13 +35,14 @@ end
 
 local ballProjectileTemplate = {
 	radius = 10,
-	speed = 25,
+	speed = 200,
 	x = nil,
 	y = nil,
 	enemyId = nil, -- track the current enemy that the projectile is tracking?
 	damage = 20,
 	size = 20,
 	color = { 0.3, 0.3, 0.3 },
+	collisions = 1,
 }
 
 local function generateBallProjectile(player, enemyId)
@@ -56,14 +56,6 @@ end
 local function detectCollision(obj1, obj2)
 	return math.abs(obj1.x - obj2.x) < (obj1.size + obj2.size) / 2
 		and math.abs(obj1.y - obj2.y) < (obj1.size + obj2.size) / 2
-end
-
-local function convertListToSet(list)
-	local set = {}
-	for i = 1, #list do
-		set[list[i]] = true
-	end
-	return set
 end
 
 -- Load assets and initialize the game
@@ -127,14 +119,29 @@ enemies[getNextEnemyId()] = testEnemy
 local movementKeysPressed = {}
 function love.update(dt)
 	if isRunning then
-		-- Player movement
+		for p_key, projectile in pairs(playerProjectiles) do
+			-- TODO: determine whether to have projectile only collide with target,
+			-- or allow collision with any target
+			for e_key, enemy in pairs(enemies) do
+				if detectCollision(projectile, enemy) then
+					enemy.health = enemy.health - projectile.damage
+					if enemy.health <= 0 then
+						enemies[e_key] = nil
+					end
+					projectile.collisions = projectile.collisions - 1
+					if projectile.collisions == 0 then
+						playerProjectiles[p_key] = nil
+					end
+				end
+			end
+		end
 		for _, enemy in pairs(enemies) do
 			moveObjectTowardsTarget(enemy, player, dt)
 		end
-		for i = 1, #playerProjectiles do
-			local projectile = playerProjectiles[i]
+		for _, projectile in pairs(playerProjectiles) do
 			moveObjectTowardsTarget(projectile, enemies[projectile.enemyId], dt)
 		end
+
 		if movementKeysPressed["up"] then
 			player.y = player.y - player.speed * dt
 		end
@@ -159,8 +166,8 @@ function love.draw()
 		for _, enemy in pairs(enemies) do
 			drawCircleFill(enemy)
 		end
-		for i = 1, #playerProjectiles do
-			drawCircleFill(playerProjectiles[i])
+		for _, projectile in pairs(playerProjectiles) do
+			drawCircleFill(projectile)
 		end
 	else
 		-- Game over screen
