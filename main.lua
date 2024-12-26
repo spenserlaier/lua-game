@@ -6,11 +6,12 @@ local player = {
 	size = 25,
 }
 
-local enemy = {
-	x = 100,
-	y = 100,
-	size = 30,
-}
+--local enemy = {
+--	x = 100,
+--	y = 100,
+--	size = 30,
+--}
+local defaultEnemySize = 30
 
 local isRunning = true -- Game state flag
 
@@ -19,12 +20,51 @@ function love.load()
 	love.window.setTitle("Lua Survivors")
 	love.graphics.setBackgroundColor(0.2, 0.3, 0.4)
 end
+local function generateEnemy(posX, posY)
+	love.graphics.setColor(0.8, 0.1, 0.2)
+	love.graphics.circle("fill", posX, posY, defaultEnemySize)
+end
+
+local function drawPlayer()
+	love.graphics.setColor(0.1, 0.8, 0.2)
+	love.graphics.rectangle("fill", player.x, player.y, player.size, player.size)
+end
+
+local function drawEnemy(enemy)
+	love.graphics.setColor(enemy.color[1], enemy.color[2], enemy.color[3])
+	love.graphics.circle("fill", enemy.x, enemy.y, enemy.size)
+end
+
+local function moveEnemy(enemyObj, playerObj, dt)
+	-- need to compute a line from enemy to player, and adjust x and y
+	-- according to that line
+	local yDiff = playerObj.y - enemyObj.y
+	local xDiff = playerObj.x - enemyObj.x
+	local vectorLength = math.sqrt((xDiff * xDiff + yDiff * yDiff))
+	local unitX = xDiff / vectorLength
+	local unitY = yDiff / vectorLength
+
+	enemyObj.x = enemyObj.x + enemyObj.speed * dt * unitX
+	enemyObj.y = enemyObj.y + enemyObj.speed * dt * unitY
+end
+local testEnemy = {
+	x = 0,
+	y = 0,
+	speed = 25,
+	color = { 0.5, 0.5, 0.5 },
+	size = 25,
+}
+local enemies = { testEnemy }
 
 -- Update game logic (called every frame)
 local movementKeysPressed = {}
 function love.update(dt)
 	if isRunning then
 		-- Player movement
+		for i = 1, #enemies do
+			local enemy = enemies[i]
+			moveEnemy(enemy, player, dt)
+		end
 		if movementKeysPressed["up"] then
 			player.y = player.y - player.speed * dt
 		end
@@ -39,12 +79,12 @@ function love.update(dt)
 		end
 
 		-- Simple collision detection
-		if
-			math.abs(player.x - enemy.x) < (player.size + enemy.size) / 2
-			and math.abs(player.y - enemy.y) < (player.size + enemy.size) / 2
-		then
-			isRunning = false -- Stop the game
-		end
+		--if
+		--	math.abs(player.x - enemy.x) < (player.size + enemy.size) / 2
+		--	and math.abs(player.y - enemy.y) < (player.size + enemy.size) / 2
+		--then
+		--	isRunning = false -- Stop the game
+		--end
 	end
 end
 
@@ -52,12 +92,11 @@ end
 function love.draw()
 	if isRunning then
 		-- Draw player
-		love.graphics.setColor(0.1, 0.8, 0.2)
-		love.graphics.rectangle("fill", player.x, player.y, player.size, player.size)
-
+		drawPlayer()
 		-- Draw enemy
-		love.graphics.setColor(0.8, 0.1, 0.2)
-		love.graphics.circle("fill", enemy.x, enemy.y, enemy.size)
+		for i = 1, #enemies do
+			drawEnemy(enemies[i])
+		end
 	else
 		-- Game over screen
 		love.graphics.setColor(1, 1, 1)
