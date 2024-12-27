@@ -136,7 +136,12 @@ function love.update(dt)
 				end
 				if detectCollision(enemy1, enemy2) then
 					if forces[enemy2] == nil then
-						forces[enemy2] = { x = 0, y = 0 }
+						local oldX2 = enemy2.x
+						local oldY2 = enemy2.y
+						gameObjects.moveObjectTowardsTarget(enemy2, player, dt)
+						forces[enemy2] = { x = enemy2.x - oldX2, y = enemy2.y - oldY2 }
+						enemy2.x = oldX2
+						enemy2.y = oldY2
 					end
 					-- bounce the first enemy back
 					forces[enemy1].y = forces[enemy1].y - yDiff -- bounce back
