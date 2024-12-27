@@ -21,7 +21,7 @@ end
 function gameEntity:Enemy()
 	local enemy = {}
 	setmetatable(enemy, gameEntity)
-	enemy["speed"] = 100
+	enemy["speed"] = 500
 	enemy["health"] = 100
 	enemy["x"] = 75
 	enemy["y"] = 100
@@ -30,7 +30,7 @@ end
 
 local gameProjectile = {
 	radius = 10,
-	speed = 200,
+	speed = 1000,
 	x = nil,
 	y = nil,
 	damage = 20,
@@ -58,10 +58,19 @@ function gameProjectile:Default(x, y, dirX, dirY)
 	return proj
 end
 local function getDistance(obj1, obj2)
-	local obj1CenterX = obj1.x + obj1.size / 2
-	local obj1CenterY = obj1.y + obj1.size / 2
-	local obj2CenterX = obj2.x + obj2.size / 2
-	local obj2CenterY = obj2.y + obj2.size / 2
+	local obj1CenterY = obj1.y
+	local obj1CenterX = obj1.x
+	local obj2CenterY = obj2.y
+	local obj2CenterX = obj2.x
+
+	if obj1.size ~= nil then
+		obj1CenterX = obj1.x + obj1.size / 2
+		obj1CenterY = obj1.y + obj1.size / 2
+	end
+	if obj2.size ~= nil then
+		obj2CenterX = obj2.x + obj2.size / 2
+		obj2CenterY = obj2.y + obj2.size / 2
+	end
 	local yDiff = obj1CenterY - obj2CenterY
 	local xDiff = obj1CenterX - obj2CenterX
 	local distance = math.sqrt((xDiff * xDiff + yDiff * yDiff))

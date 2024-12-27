@@ -155,14 +155,16 @@ function love.update(dt)
 					-- bounce the first enemy back
 					local dist = gameObjects.getDistance(enemy1, enemy2)
 					local scaleFactor = math.log(1 / dist)
+					--local scaleFactor = 1
+					scaleFactor = math.min(scaleFactor, 3)
 					-- todo: need to only adjust the forces if the given dimension (x or y) actually connects
 					-- another idea: calculate vector towards enemy2 and move opposite to that
 					local directionVector = gameObjects.getDirectionVector(enemy1, enemy2)
-					forces[enemy1].y = forces[enemy1].y - directionVector.y -- bounce back
-					forces[enemy1].x = forces[enemy1].x - directionVector.x -- bounce back
+					forces[enemy1].y = forces[enemy1].y + directionVector.y * scaleFactor -- bounce back
+					forces[enemy1].x = forces[enemy1].x + directionVector.x * scaleFactor -- bounce back
 					-- bounce the second enemy forward
-					forces[enemy2].y = forces[enemy2].y + directionVector.y
-					forces[enemy2].x = forces[enemy2].x + directionVector.x
+					forces[enemy2].y = forces[enemy2].y - directionVector.y * scaleFactor
+					forces[enemy2].x = forces[enemy2].x - directionVector.x * scaleFactor
 				end
 
 				::continue::
@@ -178,14 +180,14 @@ function love.update(dt)
 			local newYSign = getSign(force.y)
 			--if oldXSign ~= newXSign and oldXSign ~= nil then
 			if oldXSign ~= nil then
-				local lerpForce = (enemy.oldForceX + force.x) / 2.5
+				local lerpForce = (enemy.oldForceX + force.x) / 10
 				force.x = lerpForce
 				--enemy.x = enemy.x + lerpForce
 			end
 
 			--if oldYSign ~= newYSign and oldYSign ~= nil then
 			if oldYSign ~= nil then
-				local lerpForce = (enemy.oldForceY + force.y) / 2.5
+				local lerpForce = (enemy.oldForceY + force.y) / 10
 				force.y = lerpForce
 			end
 			--if math.abs(force.x) >= 0.05 then
