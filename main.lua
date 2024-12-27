@@ -135,6 +135,8 @@ function love.update(dt)
 					goto continue
 				end
 				if detectCollision(enemy1, enemy2) then
+					--TODO: maybe make force proportional to distance between objects?
+					--i.e. closer == more pushback
 					if forces[enemy2] == nil then
 						local oldX2 = enemy2.x
 						local oldY2 = enemy2.y
@@ -144,11 +146,17 @@ function love.update(dt)
 						enemy2.y = oldY2
 					end
 					-- bounce the first enemy back
-					forces[enemy1].y = forces[enemy1].y - yDiff -- bounce back
-					forces[enemy1].x = forces[enemy1].x - xDiff -- bounce back
+					local dist = gameObjects.getDistance(enemy1, enemy2)
+					--local scaleFactor = math.log(1 / dist)
+					local scaleFactor = 1
+					-- todo: need to only adjust the forces if the given dimension (x or y) actually connects
+					-- another idea: calculate vector towards enemy2 and move opposite to that
+					local directionVector = gameObjects.getDirectionVector(enemy1, enemy2)
+					forces[enemy1].y = forces[enemy1].y - directionVector.y -- bounce back
+					forces[enemy1].x = forces[enemy1].x - directionVector.x -- bounce back
 					-- bounce the second enemy forward
-					forces[enemy2].y = forces[enemy2].y + yDiff
-					forces[enemy2].x = forces[enemy2].x + xDiff
+					forces[enemy2].y = forces[enemy2].y + directionVector.y
+					forces[enemy2].x = forces[enemy2].x + directionVector.x
 				end
 
 				::continue::

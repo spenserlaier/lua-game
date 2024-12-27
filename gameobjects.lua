@@ -58,8 +58,12 @@ function gameProjectile:Default(x, y, dirX, dirY)
 	return proj
 end
 local function getDistance(obj1, obj2)
-	local yDiff = obj1.y - obj2.y
-	local xDiff = obj1.x - obj2.x
+	local obj1CenterX = obj1.x + obj1.size / 2
+	local obj1CenterY = obj1.y + obj1.size / 2
+	local obj2CenterX = obj2.x + obj2.size / 2
+	local obj2CenterY = obj2.y + obj2.size / 2
+	local yDiff = obj1CenterY - obj2CenterY
+	local xDiff = obj1CenterX - obj2CenterX
 	local distance = math.sqrt((xDiff * xDiff + yDiff * yDiff))
 	return distance
 end
@@ -103,10 +107,20 @@ end
 local function getObjectCenter(object)
 	return { x = object.x + (object.size / 2), y = object.y + (object.size / 2) }
 end
+local function getDirectionVector(object, target)
+	local yDiff = target.y - object.y
+	local xDiff = target.x - object.x
+	local vectorLength = getDistance(object, target)
+	local unitX = xDiff / vectorLength
+	local unitY = yDiff / vectorLength
+	return { x = unitX, y = unitY }
+end
 
 exports["gameProjectile"] = gameProjectile
 exports["gameEntity"] = gameEntity
 exports["getClosestObjectToTarget"] = getClosestObjectToTarget
 exports["moveObjectTowardsTarget"] = moveObjectTowardsTarget
 exports["cleanUpProjectiles"] = cleanUpProjectiles
+exports["getDistance"] = getDistance
+exports["getDirectionVector"] = getDirectionVector
 return exports
