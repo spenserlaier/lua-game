@@ -117,36 +117,43 @@ function love.update(dt)
 		end
 		timeUntilNextEnemy = timeUntilNextEnemy - dt
 		gameObjects.cleanUpProjectiles(playerProjectiles, SCREEN_WIDTH, SCREEN_HEIGHT)
+		local forces = {}
 		for idx1, enemy1 in pairs(enemies) do
 			local oldX = enemy1.x
 			local oldY = enemy1.y
 			gameObjects.moveObjectTowardsTarget(enemy1, player, dt)
 			local xDiff = enemy1.x - oldX
 			local yDiff = enemy1.y - oldY
+			enemy1.x = oldX
+			enemy1.y = oldY
 			-- TODO: what about a set/table tracking enemies we've checked already?
+			if forces[enemy1] == nil then
+				forces[enemy1] = { x = xDiff, y = yDiff }
+			end
 			for idx2, enemy2 in pairs(enemies) do
 				if idx2 == idx1 then
 					goto continue
 				end
 				if detectCollision(enemy1, enemy2) then
-					-- test just the x part
-					enemy1.x = oldX
-					if detectCollision(enemy1, enemy2) == false then
-						goto continue
+					if forces[enemy2] == nil then
+						forces[enemy2] = { x = 0, y = 0 }
 					end
-					enemy1.x = enemy1.x + xDiff
-					enemy1.y = oldY
-					if detectCollision(enemy1, enemy2) == false then
-						goto continue
-					end
-					enemy1.x = oldX - xDiff
-					enemy1.y = oldY - yDiff
-					enemy2.x = enemy2.x + xDiff
-					enemy2.y = enemy2.y + yDiff
+					-- bounce the first enemy back
+					forces[enemy1].y = forces[enemy1].y - yDiff -- bounce back
+					forces[enemy1].x = forces[enemy1].x - xDiff -- bounce back
+					-- bounce the second enemy forward
+					forces[enemy2].y = forces[enemy2].y + yDiff
+					forces[enemy2].x = forces[enemy2].x + xDiff
 				end
+
 				::continue::
 			end
 		end
+		for enemy, force in pairs(forces) do
+			enemy.x = enemy.x + force.x
+			enemy.y = enemy.y + force.y
+		end
+
 		for _, projectile in pairs(playerProjectiles) do
 			if projectile.enemyId ~= nil then
 				gameObjects.moveObjectTowardsTarget(projectile, enemies[projectile.enemyId], dt)
