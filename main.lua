@@ -31,6 +31,7 @@ local function generateEnemyAroundPlayer(player, radius, angleRadian)
 	local enemy = gameEntity:Enemy()
 	enemy.x = player.x + offsetX
 	enemy.y = player.y + offsetY
+	--TODO: also check for collisions with existing enemies
 	if 0 <= enemy.x and enemy.x < MAP_WIDTH and 0 <= enemy.y and enemy.y < MAP_HEIGHT then
 		return enemy
 	end
@@ -49,8 +50,12 @@ end
 local getNextEnemyId = generateId()
 
 local function detectCollision(obj1, obj2)
-	return math.abs(obj1.x - obj2.x) < (obj1.size + obj2.size) / 2
-		and math.abs(obj1.y - obj2.y) < (obj1.size + obj2.size) / 2
+	local obj1CenterX = obj1.x + obj1.size / 2
+	local obj1CenterY = obj1.y + obj1.size / 2
+	local obj2CenterX = obj2.x + obj2.size / 2
+	local obj2CenterY = obj2.y + obj2.size / 2
+	return math.abs(obj1CenterX - obj2CenterX) < (obj1.size + obj2.size)
+		and math.abs(obj1CenterY - obj2CenterY) < (obj1.size + obj2.size)
 end
 
 -- Load assets and initialize the game
@@ -112,8 +117,21 @@ function love.update(dt)
 		end
 		timeUntilNextEnemy = timeUntilNextEnemy - dt
 		gameObjects.cleanUpProjectiles(playerProjectiles, SCREEN_WIDTH, SCREEN_HEIGHT)
-		for _, enemy in pairs(enemies) do
-			gameObjects.moveObjectTowardsTarget(enemy, player, dt)
+		for idx1, enemy1 in pairs(enemies) do
+			local oldX = enemy1.x
+			local oldY = enemy1.y
+			gameObjects.moveObjectTowardsTarget(enemy1, player, dt)
+			for idx2, enemy2 in pairs(enemies) do
+				if idx2 == idx1 then
+					goto continue
+				end
+				if detectCollision(enemy1, enemy2) then
+					enemy1.x = oldX
+					enemy1.y = oldY
+					break
+				end
+				::continue::
+			end
 		end
 		for _, projectile in pairs(playerProjectiles) do
 			if projectile.enemyId ~= nil then
