@@ -72,8 +72,8 @@ function love.load()
 end
 
 local function drawPlayer()
-	love.graphics.setColor(0.1, 0.8, 0.2)
-	love.graphics.rectangle("fill", player.x, player.y, player.size, player.size)
+	love.graphics.setColor(player.color[1], player.color[2], player.color[3])
+	love.graphics.circle("fill", player.x, player.y, player.size)
 end
 
 local function drawCircleFill(object)
@@ -170,6 +170,24 @@ function love.update(dt)
 				::continue::
 			end
 		end
+		for key, enemy in pairs(enemies) do
+			if detectCollision(enemy, player) and player.iframes <= 0 then
+				--local scaleFactor = 1
+				player.health = player.health - enemy.damage
+				if player.health <= 0 then
+					--TODO: game over state
+					isRunning = false
+				else
+					player.iframes = player.iframesInterval
+				end
+			end
+		end
+		if player.iframes >= 0 then
+			player.color[3] = 0.8
+		else
+			player.color[3] = 0.2
+		end
+		player.iframes = player.iframes - dt
 		for enemy, force in pairs(forces) do
 			--print(force.x, force.y)
 			-- idea: store old force x and y values, and do some kind of linear

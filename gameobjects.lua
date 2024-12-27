@@ -14,6 +14,10 @@ function gameEntity:Player()
 	player["health"] = 100
 	player["x"] = 400
 	player["y"] = 300
+	player.size = 15
+	player.color = { 0.8, 0.2, 0.2 }
+	player.iframes = 0
+	player.iframesInterval = 0.5
 	player["collisionCooldownTime"] = 0
 	return player
 end
@@ -25,6 +29,7 @@ function gameEntity:Enemy()
 	enemy["health"] = 100
 	enemy["x"] = 75
 	enemy["y"] = 100
+	enemy.damage = 25
 	return enemy
 end
 
