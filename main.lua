@@ -121,14 +121,28 @@ function love.update(dt)
 			local oldX = enemy1.x
 			local oldY = enemy1.y
 			gameObjects.moveObjectTowardsTarget(enemy1, player, dt)
+			local xDiff = enemy1.x - oldX
+			local yDiff = enemy1.y - oldY
+			-- TODO: what about a set/table tracking enemies we've checked already?
 			for idx2, enemy2 in pairs(enemies) do
 				if idx2 == idx1 then
 					goto continue
 				end
 				if detectCollision(enemy1, enemy2) then
+					-- test just the x part
 					enemy1.x = oldX
+					if detectCollision(enemy1, enemy2) == false then
+						goto continue
+					end
+					enemy1.x = enemy1.x + xDiff
 					enemy1.y = oldY
-					break
+					if detectCollision(enemy1, enemy2) == false then
+						goto continue
+					end
+					enemy1.x = oldX - xDiff
+					enemy1.y = oldY - yDiff
+					enemy2.x = enemy2.x + xDiff
+					enemy2.y = enemy2.y + yDiff
 				end
 				::continue::
 			end
