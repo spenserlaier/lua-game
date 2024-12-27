@@ -24,6 +24,13 @@ local function generateId()
 		return id
 	end
 end
+local function getSign(num)
+	if num == nil then
+		return nil
+	end
+	local sign = (num > 0) and 1 or (num < 0 and -1 or 0)
+	return sign
+end
 
 local function generateEnemyAroundPlayer(player, radius, angleRadian)
 	local offsetX = (radius * math.cos(angleRadian))
@@ -147,8 +154,7 @@ function love.update(dt)
 					end
 					-- bounce the first enemy back
 					local dist = gameObjects.getDistance(enemy1, enemy2)
-					--local scaleFactor = math.log(1 / dist)
-					local scaleFactor = 1
+					local scaleFactor = math.log(1 / dist)
 					-- todo: need to only adjust the forces if the given dimension (x or y) actually connects
 					-- another idea: calculate vector towards enemy2 and move opposite to that
 					local directionVector = gameObjects.getDirectionVector(enemy1, enemy2)
@@ -163,8 +169,37 @@ function love.update(dt)
 			end
 		end
 		for enemy, force in pairs(forces) do
+			--print(force.x, force.y)
+			-- idea: store old force x and y values, and do some kind of linear
+			-- interpolation if the direction of the force changes
+			local oldXSign = getSign(enemy.oldForceX)
+			local oldYSign = getSign(enemy.oldForceY)
+			local newXSign = getSign(force.x)
+			local newYSign = getSign(force.y)
+			--if oldXSign ~= newXSign and oldXSign ~= nil then
+			if oldXSign ~= nil then
+				local lerpForce = (enemy.oldForceX + force.x) / 2.5
+				force.x = lerpForce
+				--enemy.x = enemy.x + lerpForce
+			end
+
+			--if oldYSign ~= newYSign and oldYSign ~= nil then
+			if oldYSign ~= nil then
+				local lerpForce = (enemy.oldForceY + force.y) / 2.5
+				force.y = lerpForce
+			end
+			--if math.abs(force.x) >= 0.05 then
 			enemy.x = enemy.x + force.x
+			--else
+			--force.x = 0
+			--end
+			--if math.abs(force.y) >= 0.05 then
 			enemy.y = enemy.y + force.y
+			--else
+			--force.y = 0
+			--end
+			enemy.oldForceX = force.x
+			enemy.oldForceY = force.y
 		end
 
 		for _, projectile in pairs(playerProjectiles) do
