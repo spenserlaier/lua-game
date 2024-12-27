@@ -100,6 +100,9 @@ local function cleanUpProjectiles(projectiles, screenWidth, screenHeight)
 		end
 	end
 end
+local function getObjectCenter(object)
+	return { x = object.x + (object.size / 2), y = object.y + (object.size / 2) }
+end
 
 exports["gameProjectile"] = gameProjectile
 exports["gameEntity"] = gameEntity

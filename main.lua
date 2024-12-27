@@ -7,7 +7,15 @@ local playerProjectiles = {}
 local isRunning = true -- Game state flag
 local SCREEN_WIDTH = 800
 local SCREEN_HEIGHT = 600
+local MAP_WIDTH = 10000
+local MAP_HEIGHT = 10000
 local success = love.window.setMode(SCREEN_WIDTH, SCREEN_HEIGHT)
+local enemySpawnInterval = 1
+local timeUntilNextEnemy = 1
+local enemySpawnRadius = 1
+local maxEnemies = 15
+local enemies = {}
+local numEnemies = 0
 
 local function generateId()
 	local id = 0.0
@@ -16,6 +24,28 @@ local function generateId()
 		return id
 	end
 end
+
+local function generateEnemyAroundPlayer(player, radius, angleRadian)
+	local offsetX = (radius * math.cos(angleRadian))
+	local offsetY = (radius * math.sin(angleRadian))
+	local enemy = gameEntity:Enemy()
+	enemy.x = player.x + offsetX
+	enemy.y = player.y + offsetY
+	if 0 <= enemy.x and enemy.x < MAP_WIDTH and 0 <= enemy.y and enemy.y < MAP_HEIGHT then
+		return enemy
+	end
+	return nil
+end
+
+local function generateRandomEnemy(player, radius)
+	local enemy = nil
+	while enemy == nil do
+		local randomRadian = math.random(0, 2 * math.pi)
+		enemy = generateEnemyAroundPlayer(player, radius, randomRadian)
+	end
+	return enemy
+end
+
 local getNextEnemyId = generateId()
 
 local function detectCollision(obj1, obj2)
@@ -53,12 +83,16 @@ local function sprayRingProjectiles(player, numProjectiles)
 	end
 end
 local testEnemy = gameEntity:Enemy()
-local enemies = {}
 enemies[getNextEnemyId()] = testEnemy
 -- Update game logic (called every frame)
 local movementKeysPressed = {}
 function love.update(dt)
 	if isRunning then
+		if numEnemies < maxEnemies and timeUntilNextEnemy <= 0 then
+			table.insert(enemies, generateRandomEnemy(player, 100))
+			numEnemies = numEnemies + 1
+			timeUntilNextEnemy = enemySpawnInterval
+		end
 		for p_key, projectile in pairs(playerProjectiles) do
 			-- TODO: determine whether to have projectile only collide with target,
 			-- or allow collision with any target
@@ -67,6 +101,7 @@ function love.update(dt)
 					enemy.health = enemy.health - projectile.damage
 					if enemy.health <= 0 then
 						enemies[e_key] = nil
+						numEnemies = numEnemies - 1
 					end
 					projectile.collisions = projectile.collisions - 1
 					if projectile.collisions == 0 then
@@ -75,6 +110,7 @@ function love.update(dt)
 				end
 			end
 		end
+		timeUntilNextEnemy = timeUntilNextEnemy - dt
 		gameObjects.cleanUpProjectiles(playerProjectiles, SCREEN_WIDTH, SCREEN_HEIGHT)
 		for _, enemy in pairs(enemies) do
 			gameObjects.moveObjectTowardsTarget(enemy, player, dt)
